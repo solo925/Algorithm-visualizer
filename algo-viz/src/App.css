@@ -1,0 +1,36 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #181818;
+  color: #fff;
+}
+.App {
+  text-align: center;
+  padding: 20px;
+}
+.controls {
+  margin-bottom: 20px;
+}
+.controls button,
+.controls select,
+.controls label {
+  margin: 0 8px;
+}
+.bars {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 2px;
+  height: 450px;
+}
+.bar {
+  width: 20px;
+  background: #61dafb;
+  transition: height 0.1s, background 0.1s;
+}
+.bar.compare {
+  background: #ff5555;
+}
+.bar.pivot {
+  background: #50fa7b;
+}
