@@ -1,6 +1,6 @@
 body {
-  font-family: Arial, sans-serif;
   margin: 0;
+  font-family: Arial, sans-serif;
   background: #181818;
   color: #fff;
 }
@@ -9,16 +9,27 @@ body {
   padding: 20px;
 }
 .controls {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 .controls button,
 .controls select,
 .controls label {
-  margin: 0 8px;
+  margin: 0 6px;
+}
+.stats {
+  margin-bottom: 15px;
+  font-size: 14px;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+.main {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
 }
 .bars {
   display: flex;
-  justify-content: center;
   align-items: flex-end;
   gap: 2px;
   height: 450px;
@@ -33,4 +44,23 @@ body {
 }
 .bar.pivot {
   background: #50fa7b;
+}
+.code-panel {
+  width: 300px;
+  background: #282c34;
+  text-align: left;
+  padding: 10px;
+  border-radius: 4px;
+  overflow-y: auto;
+  max-height: 450px;
+}
+.code-panel pre {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.highlight {
+  background: #61dafb44;
+  border-left: 3px solid #61dafb;
+  padding-left: 5px;
 }
