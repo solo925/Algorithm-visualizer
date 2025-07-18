@@ -1,67 +1,24 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import "./App.css";
+import { themes } from "./constants";
+import { MIN_SIZE, MAX_SIZE, MIN_SPEED, MAX_SPEED, BAR_COUNT } from './config';
+import { complexity } from "./constants";
+import { rand,sleep } from "./utils";
+import beep from "./utils/beep";
+import { codeSnippets } from "./constants";
+import bubbleSort from "./algotithms/bubble";
+import { useStats} from "./contexts/statsContext";
+import selectionSort from "./algotithms/selection";
+import mergeSort from "./algotithms/merge";
+import insertionSort from "./algotithms/insertion";
 
-// ===================== CONFIG =====================
-const MIN_SIZE = 5;
-const MAX_SIZE = 150;
-const MIN_SPEED = 1;
-const MAX_SPEED = 200;
-const BAR_COUNT = 40;
 
-// themes
-const themes = {
-  dark: {
-    bg: "#181818",
-    text: "#ffffff",
-    bar: "#61dafb",
-    compare: "#ff5555",
-    pivot: "#50fa7b",
-    modalBg: "#282c34"
-  },
-  light: {
-    bg: "#ffffff",
-    text: "#000000",
-    bar: "#007acc",
-    compare: "#ff0000",
-    pivot: "#00a000",
-    modalBg: "#f0f0f0"
-  },
-  neon: {
-    bg: "#000",
-    text: "#0ff",
-    bar: "#f0f",
-    compare: "#ff0",
-    pivot: "#0f0",
-    modalBg: "#111"
-  }
-};
 
-// complexity table
-const complexity = {
-  bubble: { time: "O(n²)", space: "O(1)", stable: "Yes" },
-  selection: { time: "O(n²)", space: "O(1)", stable: "No" },
-  insertion: { time: "O(n²) – O(n)", space: "O(1)", stable: "Yes" },
-  merge: { time: "O(n log n)", space: "O(n)", stable: "Yes" }
-};
-
-// ===================== HOOKS / HELPERS =====================
-const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-
-// beep
-const beep = (freq = 200, dur = 40) => {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    osc.frequency.value = freq;
-    osc.connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + dur / 1000);
-  } catch {}
-};
-
-// ===================== MAIN COMPONENT =====================
 export default function App() {
+
+      
+const {stats,setStats} = useStats();
+  
   // restore from URL
   const getInitial = (key, fallback) => {
     const params = new URLSearchParams(window.location.search);
@@ -69,7 +26,7 @@ export default function App() {
   };
 
   const [size, setSize] = useState(() =>
-    Math.min(MAX_SIZE, Math.max(MIN_SIZE, getInitial("size", BAR_COUNT)))
+    Math.min(MAX_SIZE, Math.max(MIN_SIZE, getInitial("size",BAR_COUNT)))
   );
   const [algorithm, setAlgorithm] = useState(
     ["bubble", "selection", "insertion", "merge"].includes(
@@ -101,59 +58,14 @@ export default function App() {
   const [stepMode, setStepMode] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
 
-  const [stats, setStats] = useState({
-    compares: 0,
-    swaps: 0,
-    reads: 0,
-    writes: 0
-  });
+
   const [currentLine, setCurrentLine] = useState(null);
   const [liveComplexity, setLiveComplexity] = useState("");
   const [compared, setCompared] = useState([]);
   const [pivot, setPivot] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  
 
-  // Place codeSnippets here before its first usage
-  const codeSnippets = {
-    bubble: [
-      "for (let i = 0; i < n - 1; i++) {",
-      "  for (let j = 0; j < n - i - 1; j++) {",
-      "    if (arr[j] > arr[j + 1]) {",
-      "      swap(arr, j, j + 1);",
-      "    }",
-      "  }",
-      "}"
-    ],
-    selection: [
-      "for (let i = 0; i < n; i++) {",
-      "  let minIdx = i;",
-      "  for (let j = i + 1; j < n; j++) {",
-      "    if (arr[j] < arr[minIdx]) minIdx = j;",
-      "  }",
-      "  swap(arr, i, minIdx);",
-      "}"
-    ],
-    insertion: [
-      "for (let i = 1; i < n; i++) {",
-      "  let key = arr[i];",
-      "  let j = i - 1;",
-      "  while (j >= 0 && arr[j] > key) {",
-      "    arr[j + 1] = arr[j];",
-      "    j--;",
-      "  }",
-      "  arr[j + 1] = key;",
-      "}"
-    ],
-    merge: [
-      "function mergeSort(arr, l, r) {",
-      "  if (l >= r) return;",
-      "  const mid = Math.floor((l + r) / 2);",
-      "  mergeSort(arr, l, mid);",
-      "  mergeSort(arr, mid + 1, r);",
-      "  merge(arr, l, mid, r);",
-      "}"
-    ]
-  };
   const codeLines = codeSnippets[algorithm];
   const animationsRef = useRef([]);
   const abortRef = useRef(null);
@@ -195,16 +107,16 @@ export default function App() {
 
     switch (algo) {
       case "bubble":
-        bubbleSort(arr, add, line, inc);
+        bubbleSort(arr, add, line, inc,stats);
         break;
       case "selection":
-        selectionSort(arr, add, line, inc);
+        selectionSort(arr, add, line, inc,stats);
         break;
       case "insertion":
-        insertionSort(arr, add, line, inc);
+        insertionSort(arr, add, line, inc,stats);
         break;
       case "merge":
-        mergeSort(arr, 0, arr.length - 1, add, line, inc);
+        mergeSort(arr, 0, arr.length - 1, add, line, inc,stats);
         break;
     }
     add("clear", {});
@@ -331,142 +243,10 @@ export default function App() {
     }
   };
 
-  // ---------- sorts ----------
-  function bubbleSort(arr, add, line, inc) {
-    const n = arr.length;
-    line(0);
-    for (let i = 0; i < n - 1; i++) {
-      line(1);
-      for (let j = 0; j < n - i - 1; j++) {
-        line(2);
-        add("compare", { i: j, j: j + 1 });
-        inc("compares");
-        add("complexity", { comps: stats.compares, swaps: stats.swaps });
-        if (arr[j] > arr[j + 1]) {
-          line(3);
-          [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
-          add("swap", { i: j, j: j + 1 });
-          inc("swaps");
-          add("complexity", { comps: stats.compares, swaps: stats.swaps });
-          inc("writes", 2);
-          add("complexity", { comps: stats.compares, swaps: stats.swaps });
-        }
-      }
-    }
-  }
 
-  function selectionSort(arr, add, line, inc) {
-    const n = arr.length;
-    line(0);
-    for (let i = 0; i < n; i++) {
-      line(1);
-      let minIdx = i;
-      line(2);
-      for (let j = i + 1; j < n; j++) {
-        line(3);
-        add("compare", { i: minIdx, j });
-        inc("compares");
-        add("complexity", { comps: stats.compares, swaps: stats.swaps });
-        if (arr[j] < arr[minIdx]) minIdx = j;
-      }
-      line(5);
-      if (minIdx !== i) {
-        [arr[i], arr[minIdx]] = [arr[minIdx], arr[i]];
-        add("swap", { i, j: minIdx });
-        inc("swaps");
-        add("complexity", { comps: stats.compares, swaps: stats.swaps });
-        inc("writes", 2);
-        add("complexity", { comps: stats.compares, swaps: stats.swaps });
-      }
-    }
-  }
 
-  function insertionSort(arr, add, line, inc) {
-    const n = arr.length;
-    line(0);
-    for (let i = 1; i < n; i++) {
-      line(1);
-      const key = arr[i];
-      inc("reads");
-      let j = i - 1;
-      line(3);
-      while (j >= 0 && arr[j] > key) {
-        line(4);
-        arr[j + 1] = arr[j];
-        add("overwrite", { i: j + 1, val: arr[j] });
-        inc("writes");
-        add("complexity", { comps: stats.compares, swaps: stats.swaps });
-        j--;
-        if (j >= 0) {
-          line(3);
-          inc("compares");
-          add("complexity", { comps: stats.compares, swaps: stats.swaps });
-        }
-      }
-      line(6);
-      arr[j + 1] = key;
-      add("overwrite", { i: j + 1, val: key });
-      inc("writes");
-      add("complexity", { comps: stats.compares, swaps: stats.swaps });
-    }
-  }
 
-  function mergeSort(arr, l, r, add, line, inc) {
-    if (l >= r) return;
-    line(2);
-    const mid = Math.floor((l + r) / 2);
-    line(3);
-    mergeSort(arr, l, mid, add, line, inc);
-    line(4);
-    mergeSort(arr, mid + 1, r, add, line, inc);
-    line(5);
-    merge(arr, l, mid, r, add, line, inc);
-  }
-
-  function merge(arr, l, mid, r, add, line, inc) {
-    const left = arr.slice(l, mid + 1);
-    const right = arr.slice(mid + 1, r + 1);
-    let i = 0,
-      j = 0,
-      k = l;
-    while (i < left.length && j < right.length) {
-      add("compare", { i: l + i, j: mid + 1 + j });
-      inc("compares");
-      add("complexity", { comps: stats.compares, swaps: stats.swaps });
-      if (left[i] <= right[j]) {
-        arr[k] = left[i];
-        add("overwrite", { i: k, val: left[i] });
-        inc("writes");
-        add("complexity", { comps: stats.compares, swaps: stats.swaps });
-        i++;
-      } else {
-        arr[k] = right[j];
-        add("overwrite", { i: k, val: right[j] });
-        inc("writes");
-        add("complexity", { comps: stats.compares, swaps: stats.swaps });
-        j++;
-      }
-      k++;
-    }
-    while (i < left.length) {
-      arr[k] = left[i];
-      add("overwrite", { i: k, val: left[i] });
-      inc("writes");
-      add("complexity", { comps: stats.compares, swaps: stats.swaps });
-      i++;
-      k++;
-    }
-    while (j < right.length) {
-      arr[k] = right[j];
-      add("overwrite", { i: k, val: right[j] });
-      inc("writes");
-      add("complexity", { comps: stats.compares, swaps: stats.swaps });
-      j++;
-      k++;
-    }
-    add("pivot", { indices: Array.from({ length: r - l + 1 }, (_, idx) => l + idx) });
-  }
-
+  
   // ---------- code snippets ----------
   // ---------- JSX ----------
   return (
